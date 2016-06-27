@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/open"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="打开蓝牙" />
+
+        <Button
+            android:id="@+id/enable_available"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="开启可见" />
+
+        <Button
+            android:id="@+id/btn_start_discover"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="开始扫描" />
+
+        <Button
+            android:id="@+id/btn_stop_discover"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="停止扫描" />
+
+    </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>
