@@ -1,7 +1,10 @@
 package joe.bluelibrary;
 
+import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothHeadset;
+import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,10 +13,14 @@ import android.os.Build;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.UUID;
 
 import joe.bluelibrary.activity.ResultActivity;
+import joe.bluelibrary.dao.ClientAction;
+import joe.bluelibrary.dao.ConnectImpl;
 import joe.bluelibrary.dao.DeviceFoundListener;
 import joe.bluelibrary.socket.ConnectThread;
 import joe.bluelibrary.socket.ServerAcceptThread;
@@ -23,13 +30,20 @@ import joe.bluelibrary.socket.ServerAcceptThread;
  * <uses-permission android:name="android.permission.BLUETOOTH" />
  * Created by chenqiao on 2016/6/24.
  */
-public class BluetoothUtils {
+public class BluetoothUtils implements ConnectImpl {
+    public static final String RESULT_NOTIFY = "joe.bluelibrary.result";
     private static BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
     private static BluetoothUtils instance;
 
+    public static Context mContext;
+
     private BluetoothUtils() {
 
+    }
+
+    public static void init(Context context) {
+        mContext = context;
     }
 
     public static BluetoothUtils getInstance() {
@@ -167,6 +181,7 @@ public class BluetoothUtils {
      * @param uuid    可以通过{@link UUID#randomUUID()}生成唯一的UUID，保存下来，写成常量传入
      * @param timeout 时长。固定时间后会停止服务端，拒绝连接{@link #stopAsServer()}
      */
+    @Override
     public void connectAsServer(UUID uuid, long timeout) {
         stopAsServer();
         serverThread = new ServerAcceptThread(uuid, bluetoothAdapter);
@@ -176,6 +191,7 @@ public class BluetoothUtils {
     /**
      * 停止作为服务端的功能（并不会取消已经连接的状态，只是不再接收连接请求）
      */
+    @Override
     public void stopAsServer() {
         if (serverThread != null && !serverThread.isInterrupted()) {
             serverThread.cancel();
@@ -186,22 +202,100 @@ public class BluetoothUtils {
     /**
      * 设备配对
      */
-    public void bondDevice(BluetoothDevice device) {
+    @Override
+    public boolean bondDevice(BluetoothDevice device) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            device.createBond();
+            return device.createBond();
+        } else {
+            Method m;
+            try {
+                m = device.getClass().getDeclaredMethod("createBond");
+                m.setAccessible(true);
+                Boolean result = (Boolean) m.invoke(device);
+                return result;
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+                return false;
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+                return false;
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                return false;
+            }
         }
     }
 
     /**
      * 连接蓝牙设备
      */
-    public ConnectThread connectAsClient(BluetoothDevice device, UUID uuid) {
-        ConnectThread thread = new ConnectThread(device, uuid, bluetoothAdapter);
-        thread.start();
-        return thread;
+    @Override
+    public ClientAction connectAsClient(BluetoothDevice device, UUID uuid) {
+        ClientAction action = null;
+        if (uuid.compareTo(UUID.fromString(UUIDs.PBAP_UUID_STR)) == 0) {
+            action = new ConnectDelegate().connect(ConnectDelegate.TYPE_PBAP, device);
+        } else {
+            ConnectThread thread = new ConnectThread(device, uuid, bluetoothAdapter);
+            thread.start();
+        }
+        return action;
     }
 
-//    public void A2DP(Context context, BluetoothProfile.ServiceListener listener) {
-//        bluetoothAdapter.getProfileProxy(context, listener, BluetoothProfile.A2DP);
-//    }
+    private BluetoothA2dp a2dp;
+
+    /**
+     * 连接A2dp设备
+     */
+    @Override
+    public void connectAsA2dp(Context context, final BluetoothDevice device) {
+        bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
+            @Override
+            public void onServiceConnected(int profile, BluetoothProfile proxy) {
+                if (profile == BluetoothProfile.A2DP) {
+                    a2dp = (BluetoothA2dp) proxy;
+                    try {
+                        a2dp.getClass().getMethod("connect", BluetoothDevice.class).invoke(a2dp, device);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(int profile) {
+                if (profile == BluetoothProfile.A2DP) {
+                    a2dp = null;
+                }
+            }
+        }, BluetoothProfile.A2DP);
+    }
+
+    private BluetoothHeadset headset;
+
+    /**
+     * 连接Headset设备
+     */
+    @Override
+    public void connectAsHeadset(Context context, final BluetoothDevice device) {
+        bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
+            @Override
+            public void onServiceConnected(int profile, BluetoothProfile proxy) {
+                if (profile == BluetoothProfile.HEADSET) {
+                    headset = (BluetoothHeadset) proxy;
+                    try {
+                        headset.getClass().getMethod("connect", BluetoothDevice.class).invoke(headset, device);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(int profile) {
+                if (profile == BluetoothProfile.HEADSET) {
+                    headset = null;
+                }
+            }
+        }, BluetoothProfile.HEADSET);
+    }
 }
