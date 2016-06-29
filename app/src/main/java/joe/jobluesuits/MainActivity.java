@@ -70,6 +70,9 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
                     case R.id.rd_4:
                         type = 4;
                         break;
+                    case R.id.rd_5:
+                        type = 5;
+                        break;
                 }
             }
         });
@@ -127,12 +130,16 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
                     case 4:
                         BluetoothUtils.getInstance().connectAsHeadset(MainActivity.this, devices.get(position));
                         break;
+                    case 5:
+                        BluetoothUtils.getInstance().connectAsPan(MainActivity.this, devices.get(position));
+                        break;
                 }
             }
         });
 
         IntentFilter intentFilter = new IntentFilter(BluetoothDevice.ACTION_UUID);
         intentFilter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        intentFilter.addAction("android.bluetooth.pan.profile.action.CONNECTION_STATE_CHANGED");
         registerReceiver(mReceiver, intentFilter);
 
         ConnectedDeviceManager.getInstance().setClientConnectListener(new ConnectedDeviceManager.SocketConnectListener() {
@@ -161,6 +168,10 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+            if (action.equals("android.bluetooth.pan.profile.action.CONNECTION_STATE_CHANGED")) {
+                int role = intent.getIntExtra("android.bluetooth.pan.extra.LOCAL_ROLE", -1);
+                Log.d("chenqiao", "role:" + role);
+            }
             //配对成功
             if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
                 BluetoothDevice btd = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);

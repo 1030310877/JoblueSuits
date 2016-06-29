@@ -28,10 +28,10 @@ import joe.bluelibrary.socket.ServerAcceptThread;
 /**
  * Description
  * <uses-permission android:name="android.permission.BLUETOOTH" />
+ * <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
  * Created by chenqiao on 2016/6/24.
  */
 public class BluetoothUtils implements ConnectImpl {
-    public static final String RESULT_NOTIFY = "joe.bluelibrary.result";
     private static BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
     private static BluetoothUtils instance;
@@ -297,5 +297,39 @@ public class BluetoothUtils implements ConnectImpl {
                 }
             }
         }, BluetoothProfile.HEADSET);
+    }
+
+    @Override
+    public void connectAsPan(Context context, final BluetoothDevice device) {
+        bluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
+            @Override
+            public void onServiceConnected(int profile, BluetoothProfile proxy) {
+                if (profile == 5) {
+                    try {
+                        Class clzz = Class.forName("android.bluetooth.BluetoothPan");
+                        Method method = clzz.getDeclaredMethod("isValidDevice", BluetoothDevice.class);
+                        method.setAccessible(true);
+                        Boolean result = (Boolean) method.invoke(proxy, device);
+                        if (result) {
+                            clzz.getMethod("connect", BluetoothDevice.class).invoke(proxy, device);
+                        }
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchMethodException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(int profile) {
+                if (profile == 5) {
+                }
+            }
+        }, 5);
     }
 }

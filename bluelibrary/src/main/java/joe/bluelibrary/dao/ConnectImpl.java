@@ -21,4 +21,6 @@ public interface ConnectImpl {
     void connectAsA2dp(Context context, BluetoothDevice device);
 
     void connectAsHeadset(Context context, BluetoothDevice device);
+
+    void connectAsPan(Context context, BluetoothDevice device);
 }
