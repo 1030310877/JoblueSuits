@@ -29,7 +29,7 @@ public class ServerAcceptThread extends Thread {
     @Override
     public void run() {
         while (!isInterrupted()) {
-            BluetoothSocket socket = null;
+            BluetoothSocket socket;
             try {
                 socket = serverSocket.accept(TIMEOUT);
             } catch (IOException e) {

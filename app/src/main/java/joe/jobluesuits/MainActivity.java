@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -17,7 +18,11 @@ import android.widget.RadioGroup;
 
 import com.android.vcard.VCardEntry;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +43,8 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
     private int type = 1;
     private ClientAction client;
 
+    private Handler handler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
         recyclerView = (RecyclerView) findViewById(R.id.listview);
         devices = new ArrayList<>();
         tempDevices = new HashSet<>();
-
+        handler = new Handler();
         adapter = new DevicesAdapter(devices);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -53,6 +60,27 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
 
         devices.addAll(BluetoothUtils.getBondedDevices());
 
+        findViewById(R.id.rd_6).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                UUID uuid = UUID.fromString("22d3122e-11d6-4fcb-9ce9-7173f7dae5a7");
+                BluetoothUtils.getInstance().connectAsServer(uuid);
+            }
+        });
+        findViewById(R.id.rd_8).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (nowSocket != null) {
+                    try {
+                        OutputStream out = nowSocket.getOutputStream();
+                        out.write(new String("hello").getBytes());
+                        out.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
         RadioGroup radioGroup = (RadioGroup) findViewById(R.id.rg_main);
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -72,6 +100,9 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
                         break;
                     case R.id.rd_5:
                         type = 5;
+                        break;
+                    case R.id.rd_7:
+                        type = 7;
                         break;
                 }
             }
@@ -133,6 +164,8 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
                     case 5:
                         BluetoothUtils.getInstance().connectAsPan(MainActivity.this, devices.get(position));
                         break;
+                    case 7:
+                        BluetoothUtils.getInstance().connectAsClient(devices.get(position), UUID.fromString("22d3122e-11d6-4fcb-9ce9-7173f7dae5a7"));
                 }
             }
         });
@@ -145,9 +178,31 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
         ConnectedDeviceManager.getInstance().setClientConnectListener(new ConnectedDeviceManager.SocketConnectListener() {
             @Override
             public void aClientConnected(BluetoothSocket socket) {
+                Log.d("chenqiao", "client connected");
+                nowSocket = socket;
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            InputStream in = nowSocket.getInputStream();
+                            byte[] content = new byte[1024];
+                            int len = 0;
+                            while ((len = in.read(content)) > 0) {
+                                byte[] t = Arrays.copyOfRange(content, 0, len);
+                                String temp = new String(t);
+                                Log.d("chenqiao", "receive:" + temp);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }).start();
             }
         });
     }
+
+    private BluetoothSocket nowSocket;
 
     @Override
     public void findADevice(BluetoothDevice device) {
