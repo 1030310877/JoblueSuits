@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothSocket;
 import java.io.IOException;
 import java.util.UUID;
 
+import joe.bluelibrary.dao.ConnectListener;
+
 /**
  * Description
  * Created by chenqiao on 2016/6/27.
@@ -16,10 +18,12 @@ public class ConnectThread extends Thread {
     private BluetoothDevice device;
     private BluetoothSocket socket;
     private BluetoothAdapter bluetoothAdapter;
+    private ConnectListener connectListener;
 
-    public ConnectThread(BluetoothDevice device, UUID uuid, BluetoothAdapter bluetoothAdapter) {
+    public ConnectThread(BluetoothDevice device, UUID uuid, BluetoothAdapter bluetoothAdapter, ConnectListener connectListener) {
         this.device = device;
         this.bluetoothAdapter = bluetoothAdapter;
+        this.connectListener = connectListener;
         try {
             socket = device.createRfcommSocketToServiceRecord(uuid);
         } catch (IOException e) {
@@ -34,7 +38,9 @@ public class ConnectThread extends Thread {
         if (socket != null) {
             try {
                 socket.connect();
-                ConnectedDeviceManager.getInstance().add(socket);
+                if (connectListener != null) {
+                    connectListener.connect(socket);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 cancel();
@@ -45,7 +51,9 @@ public class ConnectThread extends Thread {
     public void cancel() {
         try {
             socket.close();
-            ConnectedDeviceManager.getInstance().remove(socket);
+            if (connectListener != null) {
+                connectListener.disconnect();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

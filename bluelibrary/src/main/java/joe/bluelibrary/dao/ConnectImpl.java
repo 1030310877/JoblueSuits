@@ -10,11 +10,13 @@ import java.util.UUID;
  * Created by chenqiao on 2016/6/28.
  */
 public interface ConnectImpl {
-    void connectAsServer(UUID uuid, long timeout);
+    void startAsServer(UUID uuid, long timeout);
 
     void stopAsServer();
 
     ClientAction connectAsClient(BluetoothDevice device, UUID uuid);
+
+    ClientAction connectAsClient(BluetoothDevice device, UUID uuid, ConnectListener listener);
 
     boolean bondDevice(BluetoothDevice device);
 

@@ -19,8 +19,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import joe.bluelibrary.activity.ResultActivity;
+import joe.bluelibrary.dao.BluetoothEnableListener;
 import joe.bluelibrary.dao.ClientAction;
 import joe.bluelibrary.dao.ConnectImpl;
+import joe.bluelibrary.dao.ConnectListener;
 import joe.bluelibrary.dao.DeviceFoundListener;
 import joe.bluelibrary.socket.ConnectThread;
 import joe.bluelibrary.socket.ServerAcceptThread;
@@ -71,14 +73,23 @@ public class BluetoothUtils implements ConnectImpl {
         return bluetoothAdapter != null && bluetoothAdapter.isEnabled();
     }
 
+
     /**
      * 打开蓝牙
      */
     public static void enableBluetooth(Context context) {
+        enableBluetooth(context, null);
+    }
+
+    /**
+     * 打开蓝牙
+     */
+    public static void enableBluetooth(Context context, BluetoothEnableListener listener) {
         if (!isEnable()) {
             Intent tempIntent = new Intent(context, ResultActivity.class);
             tempIntent.putExtra("type", 1);
             context.startActivity(tempIntent);
+            ResultActivity.listener = listener;
         } else {
             if (Thread.currentThread() == context.getMainLooper().getThread()) {
                 Toast.makeText(context, "蓝牙已经打开", Toast.LENGTH_SHORT).show();
@@ -170,8 +181,8 @@ public class BluetoothUtils implements ConnectImpl {
      *
      * @param uuid 可以通过{@link UUID#randomUUID()}生成唯一的UUID，保存下来，写成常量传入
      */
-    public void connectAsServer(UUID uuid) {
-        connectAsServer(uuid, -1);
+    public void startAsServer(UUID uuid) {
+        startAsServer(uuid, -1);
     }
 
     /**
@@ -181,8 +192,7 @@ public class BluetoothUtils implements ConnectImpl {
      * @param uuid    可以通过{@link UUID#randomUUID()}生成唯一的UUID，保存下来，写成常量传入
      * @param timeout 时长。固定时间后会停止服务端，拒绝连接{@link #stopAsServer()}
      */
-    @Override
-    public void connectAsServer(UUID uuid, long timeout) {
+    public void startAsServer(UUID uuid, long timeout) {
         stopAsServer();
         serverThread = new ServerAcceptThread(uuid, bluetoothAdapter);
         serverThread.start(timeout);
@@ -228,14 +238,29 @@ public class BluetoothUtils implements ConnectImpl {
 
     /**
      * 连接蓝牙设备
+     *
+     * @param device 蓝牙设备
+     * @param uuid   功能id
      */
     @Override
     public ClientAction connectAsClient(BluetoothDevice device, UUID uuid) {
+        return this.connectAsClient(device, uuid, null);
+    }
+
+    /**
+     * 连接蓝牙设备
+     *
+     * @param device          蓝牙设备
+     * @param uuid            功能id
+     * @param connectListener 连接回调
+     */
+    @Override
+    public ClientAction connectAsClient(BluetoothDevice device, UUID uuid, ConnectListener connectListener) {
         ClientAction action = null;
         if (uuid.compareTo(UUID.fromString(UUIDs.PBAP_UUID_STR)) == 0) {
-            action = new ConnectDelegate().connect(ConnectDelegate.TYPE_PBAP, device);
+            action = new ConnectDelegate().connect(ConnectDelegate.TYPE_PBAP, device, connectListener);
         } else {
-            ConnectThread thread = new ConnectThread(device, uuid, bluetoothAdapter);
+            ConnectThread thread = new ConnectThread(device, uuid, bluetoothAdapter, connectListener);
             thread.start();
         }
         return action;

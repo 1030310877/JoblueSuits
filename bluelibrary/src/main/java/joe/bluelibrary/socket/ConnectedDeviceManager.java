@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * Description
+ * Description  服务器端设备连接监听
  * Created by chenqiao on 2016/6/27.
  */
 public class ConnectedDeviceManager {
@@ -39,7 +39,7 @@ public class ConnectedDeviceManager {
     public void add(BluetoothSocket socket) {
         connectedSockets.add(socket);
         if (listener != null) {
-            listener.aClientConnected(socket);
+            listener.clientConnected(socket);
         }
     }
 
@@ -67,6 +67,6 @@ public class ConnectedDeviceManager {
     }
 
     public interface SocketConnectListener {
-        void aClientConnected(BluetoothSocket socket);
+        void clientConnected(BluetoothSocket socket);
     }
 }

@@ -11,6 +11,7 @@ import com.android.vcard.VCardEntry;
 import java.util.ArrayList;
 
 import joe.bluelibrary.dao.ClientAction;
+import joe.bluelibrary.dao.ConnectListener;
 
 /**
  * Description
@@ -20,13 +21,13 @@ public class ConnectDelegate {
 
     public static final int TYPE_PBAP = 1;
 
-    private ClientAction client;
+    private ClientAction<ArrayList<VCardEntry>> client;
 
     public ConnectDelegate() {
 
     }
 
-    public ClientAction connect(int type, BluetoothDevice device) {
+    public ClientAction connect(int type, BluetoothDevice device, final ConnectListener connectListener) {
         switch (type) {
             case TYPE_PBAP:
                 HandlerThread thread = new HandlerThread("BluetoothPbapClient");
@@ -35,6 +36,16 @@ public class ConnectDelegate {
                     @Override
                     public void handleMessage(Message msg) {
                         switch (msg.what) {
+                            case BluetoothPbapClient.EVENT_SESSION_CONNECTED:
+                                if (connectListener != null) {
+                                    connectListener.connect(null);
+                                }
+                                break;
+                            case BluetoothPbapClient.EVENT_SESSION_DISCONNECTED:
+                                if (connectListener != null) {
+                                    connectListener.disconnect();
+                                }
+                                break;
                             case BluetoothPbapClient.EVENT_PULL_PHONE_BOOK_DONE: {
                                 if (msg.obj instanceof ArrayList) {
                                     ArrayList<VCardEntry> entrys = (ArrayList<VCardEntry>) msg.obj;

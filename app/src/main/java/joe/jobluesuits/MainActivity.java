@@ -31,6 +31,7 @@ import java.util.UUID;
 import joe.bluelibrary.BluetoothUtils;
 import joe.bluelibrary.UUIDs;
 import joe.bluelibrary.dao.ClientAction;
+import joe.bluelibrary.dao.ConnectListener;
 import joe.bluelibrary.dao.DeviceFoundListener;
 import joe.bluelibrary.socket.ConnectedDeviceManager;
 
@@ -64,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
             @Override
             public void onClick(View v) {
                 UUID uuid = UUID.fromString("22d3122e-11d6-4fcb-9ce9-7173f7dae5a7");
-                BluetoothUtils.getInstance().connectAsServer(uuid);
+                BluetoothUtils.getInstance().startAsServer(uuid);
             }
         });
         findViewById(R.id.rd_8).setOnClickListener(new View.OnClickListener() {
@@ -165,7 +166,17 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
                         BluetoothUtils.getInstance().connectAsPan(MainActivity.this, devices.get(position));
                         break;
                     case 7:
-                        BluetoothUtils.getInstance().connectAsClient(devices.get(position), UUID.fromString("22d3122e-11d6-4fcb-9ce9-7173f7dae5a7"));
+                        BluetoothUtils.getInstance().connectAsClient(devices.get(position), UUID.fromString("22d3122e-11d6-4fcb-9ce9-7173f7dae5a7"), new ConnectListener() {
+                            @Override
+                            public void connect(BluetoothSocket socket) {
+                                Log.d("chenqiao", "connect success");
+                            }
+
+                            @Override
+                            public void disconnect() {
+                                Log.d("chenqiao", "connect failed or disconnect");
+                            }
+                        });
                 }
             }
         });
@@ -177,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
 
         ConnectedDeviceManager.getInstance().setClientConnectListener(new ConnectedDeviceManager.SocketConnectListener() {
             @Override
-            public void aClientConnected(BluetoothSocket socket) {
+            public void clientConnected(BluetoothSocket socket) {
                 Log.d("chenqiao", "client connected");
                 nowSocket = socket;
                 new Thread(new Runnable() {

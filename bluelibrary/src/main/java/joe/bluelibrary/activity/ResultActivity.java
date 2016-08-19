@@ -8,6 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import joe.bluelibrary.R;
+import joe.bluelibrary.dao.BluetoothEnableListener;
 
 /**
  * Description
@@ -18,6 +19,7 @@ public class ResultActivity extends Activity {
     private static final int REQUEST_ENABLE_BT = 0x99;
     private static final int REQUEST_AVAILABLE = 0xAA;
     private LinearLayout wait;
+    public static BluetoothEnableListener listener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,9 +50,15 @@ public class ResultActivity extends Activity {
                 switch (resultCode) {
                     case RESULT_OK:
                         Toast.makeText(this, R.string.enable_ok, Toast.LENGTH_SHORT).show();
+                        if (listener != null) {
+                            listener.enable();
+                        }
                         break;
                     case RESULT_CANCELED:
                         Toast.makeText(this, R.string.enable_cancel, Toast.LENGTH_SHORT).show();
+                        if (listener != null) {
+                            listener.disable();
+                        }
                         break;
                 }
                 finish();
