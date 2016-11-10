@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
@@ -38,14 +39,8 @@ public class BluetoothUtils implements ConnectImpl {
 
     private static BluetoothUtils instance;
 
-    public static Context mContext;
-
     private BluetoothUtils() {
 
-    }
-
-    public static void init(Context context) {
-        mContext = context;
     }
 
     public static BluetoothUtils getInstance() {
@@ -147,6 +142,7 @@ public class BluetoothUtils implements ConnectImpl {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                Log.d("chenqiao", "onReceive: find device=" + device.getName());
                 if (resultListener != null) {
                     resultListener.findADevice(device);
                 }

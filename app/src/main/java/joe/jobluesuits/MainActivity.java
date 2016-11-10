@@ -46,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
 
     private Handler handler;
 
+    String myUUID = "00001101-0000-1000-8000-00805f9b34fb";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
         findViewById(R.id.rd_6).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                UUID uuid = UUID.fromString("22d3122e-11d6-4fcb-9ce9-7173f7dae5a7");
+                UUID uuid = UUID.fromString(myUUID);
                 BluetoothUtils.getInstance().startAsServer(uuid);
             }
         });
@@ -166,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
                         BluetoothUtils.getInstance().connectAsPan(MainActivity.this, devices.get(position));
                         break;
                     case 7:
-                        BluetoothUtils.getInstance().connectAsClient(devices.get(position), UUID.fromString("22d3122e-11d6-4fcb-9ce9-7173f7dae5a7"), new ConnectListener() {
+                        BluetoothUtils.getInstance().connectAsClient(devices.get(position), UUID.fromString(myUUID), new ConnectListener() {
                             @Override
                             public void connect(BluetoothSocket socket) {
                                 Log.d("chenqiao", "connect success");
