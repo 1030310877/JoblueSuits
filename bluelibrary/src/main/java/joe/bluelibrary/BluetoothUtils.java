@@ -126,7 +126,8 @@ public class BluetoothUtils implements ConnectImpl {
     /**
      * 停止扫描设备{@link #startDiscoverDevices}
      */
-    public void stopDiscoverDevices() {
+    public void stopDiscoverDevicesAndDestroy() {
+        cancelDiscovery();
         if (disCoverContext.get() != null) {
             disCoverContext.get().unregisterReceiver(scanReceiver);
         }
@@ -134,7 +135,16 @@ public class BluetoothUtils implements ConnectImpl {
     }
 
     /**
-     * 开始扫描蓝牙设备{@link #stopDiscoverDevices},扫描只会持续12秒。
+     * 取消扫描设备
+     */
+    public void cancelDiscovery() {
+        if (isSupported()) {
+            bluetoothAdapter.cancelDiscovery();
+        }
+    }
+
+    /**
+     * 开始扫描蓝牙设备{@link #cancelDiscovery()}、{@link #stopDiscoverDevicesAndDestroy()},扫描只会持续12秒。
      *
      * @param context  建议传ApplicationContext
      * @param listener 扫描结果回调（没当扫描到一个设备就进行一次回调）
@@ -269,12 +279,13 @@ public class BluetoothUtils implements ConnectImpl {
      */
     @Override
     public ClientAction connectAsClient(BluetoothDevice device, UUID uuid, ConnectListener connectListener) {
-        ClientAction action = null;
+        ClientAction action;
         if (uuid.compareTo(UUID.fromString(UUIDs.PBAP_UUID_STR)) == 0) {
             action = new ConnectDelegate().connect(ConnectDelegate.TYPE_PBAP, device, connectListener);
         } else {
             ConnectThread thread = new ConnectThread(device, uuid, bluetoothAdapter, connectListener);
             thread.start();
+            action = thread;
         }
         return action;
     }

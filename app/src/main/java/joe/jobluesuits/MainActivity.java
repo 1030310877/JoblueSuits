@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
         findViewById(R.id.btn_stop_discover).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BluetoothUtils.getInstance().stopDiscoverDevices();
+                BluetoothUtils.getInstance().cancelDiscovery();
             }
         });
 
@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        BluetoothUtils.getInstance().stopDiscoverDevices();
+        BluetoothUtils.getInstance().stopDiscoverDevicesAndDestroy();
     }
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
