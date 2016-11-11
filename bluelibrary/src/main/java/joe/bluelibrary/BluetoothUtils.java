@@ -68,19 +68,27 @@ public class BluetoothUtils implements ConnectImpl {
         return bluetoothAdapter != null && bluetoothAdapter.isEnabled();
     }
 
-
     /**
-     * 打开蓝牙
+     * 强制打开蓝牙
      */
-    public static void enableBluetooth(Context context) {
-        enableBluetooth(context, null);
+    public static void forceEnableBluetooth() {
+        if (!isEnable() && isSupported()) {
+            bluetoothAdapter.enable();
+        }
     }
 
     /**
      * 打开蓝牙
      */
-    public static void enableBluetooth(Context context, BluetoothEnableListener listener) {
-        if (!isEnable()) {
+    public static void enableBluetoothForRequest(Context context) {
+        enableBluetoothForRequest(context, null);
+    }
+
+    /**
+     * 打开蓝牙
+     */
+    public static void enableBluetoothForRequest(Context context, BluetoothEnableListener listener) {
+        if (!isEnable() && isSupported()) {
             Intent tempIntent = new Intent(context, ResultActivity.class);
             tempIntent.putExtra("type", 1);
             context.startActivity(tempIntent);
@@ -89,6 +97,15 @@ public class BluetoothUtils implements ConnectImpl {
             if (Thread.currentThread() == context.getMainLooper().getThread()) {
                 Toast.makeText(context, "蓝牙已经打开", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    /**
+     * 关闭蓝牙
+     */
+    public static void disableBluetooth() {
+        if (isEnable()) {
+            bluetoothAdapter.disable();
         }
     }
 

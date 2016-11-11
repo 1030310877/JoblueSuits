@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
         findViewById(R.id.open).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BluetoothUtils.enableBluetooth(MainActivity.this);
+                BluetoothUtils.enableBluetoothForRequest(MainActivity.this);
             }
         });
         findViewById(R.id.enable_available).setOnClickListener(new View.OnClickListener() {
@@ -172,6 +172,17 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
                             @Override
                             public void connect(BluetoothSocket socket) {
                                 Log.d("chenqiao", "connect success");
+                                try {
+                                    InputStream inputStream = socket.getInputStream();
+                                    int len;
+                                    byte[] datas = new byte[1024];
+                                    while ((len = inputStream.read(datas)) > 0) {
+                                        byte[] receive = Arrays.copyOfRange(datas, 0, len);
+                                        Log.d("chenqiao", "receive:" + bytesToHexString(receive));
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
 
                             @Override
@@ -213,6 +224,22 @@ public class MainActivity extends AppCompatActivity implements DeviceFoundListen
                 }).start();
             }
         });
+    }
+
+    public static String bytesToHexString(byte[] src) {
+        StringBuilder stringBuilder = new StringBuilder("");
+        if (src == null || src.length <= 0) {
+            return null;
+        }
+        for (int i = 0; i < src.length; i++) {
+            int v = src[i] & 0xFF;
+            String hv = Integer.toHexString(v);
+            if (hv.length() < 2) {
+                stringBuilder.append(0);
+            }
+            stringBuilder.append(hv);
+        }
+        return stringBuilder.toString();
     }
 
     private BluetoothSocket nowSocket;
