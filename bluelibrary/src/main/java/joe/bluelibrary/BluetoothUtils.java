@@ -129,7 +129,11 @@ public class BluetoothUtils implements ConnectImpl {
     public void stopDiscoverDevicesAndDestroy() {
         cancelDiscovery();
         if (disCoverContext != null && disCoverContext.get() != null) {
-            disCoverContext.get().unregisterReceiver(scanReceiver);
+            try {
+                disCoverContext.get().unregisterReceiver(scanReceiver);
+            } catch (Exception e) {
+                Log.e("BluetoothUtils", "stopDiscoverDevicesAndDestroy: ", e);
+            }
         }
         resultListener = null;
     }
